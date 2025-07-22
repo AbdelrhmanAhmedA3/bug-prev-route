@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
-import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TabsModule } from 'primeng/tabs';
-import { filter, pairwise } from 'rxjs';
+import { NavigationService } from '../../../core';
 
 @Component({
   selector: 'app-home',
@@ -11,6 +11,7 @@ import { filter, pairwise } from 'rxjs';
 })
 export class Home {
   protected readonly router = inject(Router);
+  protected readonly navigationService = inject(NavigationService);
   readonly Tabs = {
     ALL_CUSTOMERS: 0,
     ALL_GROUPS: 1,
@@ -18,18 +19,9 @@ export class Home {
 
   activeTab = signal<any>(this.Tabs.ALL_CUSTOMERS);
   ngOnInit() {
-    this.router.events
-      .pipe(
-        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
-        pairwise() // get previous and current NavigationEnd
-      )
-      .subscribe(([previous, current]) => {
-        console.log(previous);
-
-        if (previous.url.includes('/group')) {
-          this.activeTab.set(this.Tabs.ALL_GROUPS);
-          console.log(this.activeTab());
-        }
-      });
+    const previousUrl = this.navigationService.getPreviousUrl();
+    if (previousUrl?.includes('group')) {
+      this.activeTab.set(this.Tabs.ALL_GROUPS);
+    }
   }
 }
